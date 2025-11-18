@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asistente Escolar</title>
+  <meta name="description" content="Asistente virtual G.U.E. Leoncio Prado — Robot futurista glass panel, responsive y profesional.">
+
+  <style>
+    :root{
+      --bg1:#061226; --bg2:#0b2142; --bg3:#142b55;
+      --card: rgba(255,255,255,0.03);
+      --glass: rgba(255,255,255,0.06);
+      --accent: #00e0ff;
+      --accent-2: #8affc1;
+      --muted: #9fb6d8;
+      --text: #e6f4ff;
+      --bot-bg: rgba(255,255,255,0.04);
+      --user-bg: linear-gradient(120deg,#00d4ff,#0077ff);
+      --shadow: 0 10px 30px rgba(0,0,0,0.45);
+      --card-radius: 14px;
+    }
+
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:var(--text);}
+    body{
+      display:flex;align-items:center;justify-content:center;
+      padding:16px;background:linear-gradient(135deg,var(--bg1),var(--bg2) 40%,var(--bg3));
+      background-attachment:fixed;
+    }
+
+    .app{
+      width:98%; max-width:1200px; height:92vh;
+      display:grid; grid-template-columns:300px 1fr; gap:18px;
+      background:var(--card); border-radius:var(--card-radius); padding:12px;
+      box-shadow:var(--shadow); overflow:hidden;
+    }
+
+    .sidebar{
+      background:#040612;
+      border-radius:10px; padding:14px; color:var(--text); overflow:auto;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .logo{font-weight:800;color:var(--accent);font-size:1.05rem;margin-bottom:12px}
+    .quick button{
+      width:100%; text-align:left; padding:10px; margin:6px 0; border-radius:8px;
+      background:transparent; color:var(--text); border:1px solid rgba(255,255,255,0.12); cursor:pointer;
+      transition:0.25s;
+    }
+    .quick button:hover{ 
+      background:linear-gradient(90deg, rgba(0,224,255,0.12), rgba(138,255,193,0.06)); 
+      color:#022433; transform:translateY(-2px);
+    }
+
+    .menu-btn{
+      display:none; position:fixed; top:18px; left:18px; z-index:60;
+      background:#070a12; color:var(--accent); border:1px solid rgba(0,224,255,0.2);
+      padding:10px 12px; border-radius:10px; font-size:18px; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    .chat-box{
+      display:flex; flex-direction:column; border-radius:10px; overflow:hidden; height:100%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .chat-header{
+      display:flex; align-items:center; gap:12px; padding:14px; border-bottom:1px solid rgba(255,255,255,0.03);
+    }
+    .chat-header h1{ margin:0; font-size:1.02rem; color:var(--accent); font-weight:700 }
+    .chat-window{
+      flex:1; padding:18px; overflow:auto; display:flex; flex-direction:column; gap:12px; scroll-behavior:smooth;
+    }
+    .chat-window::-webkit-scrollbar{width:8px}
+    .chat-window::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:8px}
+
+    .row{display:flex; align-items:flex-start; gap:12px}
+    .row.user{ justify-content:flex-end }
+    .bubble{
+      max-width:78%; padding:12px 14px; border-radius:12px; line-height:1.35; font-size:0.96rem; word-wrap:break-word;
+      box-shadow:0 6px 18px rgba(0,0,0,0.45);
+    }
+    .bubble.user{ background:var(--user-bg); color:white; border-radius:14px 14px 0 14px; }
+    .bubble.bot{ background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); color:var(--text); border-radius:14px 14px 14px 0; border:1px solid rgba(255,255,255,0.02) }
+
+    .robot-wrapper{ width:88px; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+    .robot-glass{
+      width:84px; height:84px; border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.07); position:relative;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55), inset 0 -6px 18px rgba(0,224,255,0.02);
+      display:flex; align-items:center; justify-content:center; flex-direction:column;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      transition:transform .28s ease, box-shadow .28s;
+    }
+    .robot-glass:hover{ transform:translateY(-4px); box-shadow:0 18px 36px rgba(0,0,0,0.7) }
+
+    .robot-led-left, .robot-led-right{
+      position:absolute; top:8px; width:10px; height:10px; border-radius:50%;
+      box-shadow: 0 0 12px rgba(0,224,255,0.9);
+      background:var(--accent);
+    }
+    .robot-led-left{ left:8px; }
+    .robot-led-right{ right:8px; }
+
+    .robot-eyes{ display:flex; gap:12px; align-items:center; justify-content:center; }
+    .eye{
+      width:22px; height:22px; border-radius:6px; background: linear-gradient(180deg,#00f0ff,#00b8ff);
+      box-shadow: 0 6px 18px rgba(0,224,255,0.14), 0 0 18px rgba(0,224,255,0.6);
+      position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;
+      transform-origin:center center;
+      animation:eyeFloat 4s ease-in-out infinite;
+    }
+    .eye::after{
+      content:""; width:8px; height:8px; background:#00222b; border-radius:50%; position:absolute; transform:translate(0,0);
+      transition:transform .25s linear;
+      box-shadow:0 1px 1px rgba(255,255,255,0.03) inset;
+    }
+    @keyframes eyeFloat{ 0%{transform:translateY(0)}50%{transform:translateY(-3px)}100%{transform:translateY(0)} }
+
+    .robot-mouth{
+      width:44px; height:8px; border-radius:6px; margin-top:8px;
+      background: linear-gradient(90deg,#00ffa6,#00bfff);
+      box-shadow: 0 8px 20px rgba(0,200,255,0.12), 0 0 20px rgba(0,200,255,0.25);
+      transform-origin:center; animation:mouthIdle 2.6s ease-in-out infinite;
+    }
+    @keyframes mouthIdle{ 0%{ transform:scaleY(1)} 50%{ transform:scaleY(0.75)} 100%{ transform:scaleY(1)} }
+
+    .robot-glass.talking .robot-mouth{
+      animation:mouthTalk .12s steps(2) infinite;
+      box-shadow: 0 10px 30px rgba(0,220,255,0.25);
+    }
+    @keyframes mouthTalk{ 0%{transform:scaleY(.2)} 100%{transform:scaleY(1)} }
+
+    .typing{ display:flex; align-items:center; gap:6px; padding:8px 10px; border-radius:12px; background:rgba(255,255,255,0.02) }
+    .dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); opacity:0.6; animation:dotBlink 1.2s infinite; }
+    .dot:nth-child(2){ animation-delay:.15s } .dot:nth-child(3){ animation-delay:.3s }
+    @keyframes dotBlink{ 0%{ transform:translateY(0); opacity:.5 } 50%{ transform:translateY(-6px); opacity:1 } 100%{ transform:translateY(0); opacity:.5 } }
+
+    .composer{
+      display:flex; gap:8px; padding:12px; align-items:center; border-top:1px solid rgba(255,255,255,0.03);
+      background: linear-gradient(180deg, rgba(0,0,0,0.06), rgba(255,255,255,0.01));
+    }
+    .composer input{
+      flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04);
+      background:transparent; color:var(--text); outline:none;
+    }
+    .composer button{
+      padding:9px 12px; border-radius:8px; border:none; background:var(--accent); color:#022433; font-weight:700; cursor:pointer;
+    }
+
+    @media (max-width:980px){
+      .app{ grid-template-columns: 1fr; height:95vh; gap:12px; }
+      .sidebar{ position:fixed; left:0; top:0; bottom:0; width:78%; transform:translateX(-108%); transition:transform .28s ease; z-index:70; padding-top:80px; background:#040612; }
+      .sidebar.active{ transform:translateX(0) }
+      .menu-btn{ display:block }
+      .robot-wrapper{ width:70px }
+      .robot-glass{ width:72px; height:72px }
+      .bubble{ max-width:72% }
+    }
+  </style>
+</head>
+
+<body>
+
+  <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">☰</button>
+
+  <div class="app">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="logo">🏫 G.U.E. Leoncio Prado</div>
+      <div class="quick">
+        <button onclick="quick('misión y visión')">🏫 Misión y Visión</button>
+        <button onclick="quick('valores institucionales')">🎯 Valores institucionales</button>
+        <button onclick="quick('talleres extracurriculares')">💡 Talleres extracurriculares</button>
+        <button onclick="quick('reglamento interno')">📚 Reglamento interno</button>
+        <button onclick="quick('biblioteca')">📘 Biblioteca</button>
+        <button onclick="quick('servicios del colegio')">🛠️ Servicios del colegio</button>
+        <button onclick="quick('uniforme escolar')">👕 Uniforme escolar</button>
+        <button onclick="quick('historia')">🏛️ Historia del colegio</button>
+        <button onclick="quick('actividades escolares')">📅 Actividades escolares</button>
+        <button onclick="quick('autoridades')">👨‍🏫 Autoridades</button>
+        <button onclick="quick('contacto')">☎️ Contacto</button>
+        <button onclick="quick('horarios')">🕐 Horarios</button>
+        <button onclick="quick('matrícula')">🧾 Matrícula</button>
+        <button onclick="quick('himnos')">🎶 Himnos</button>
+      </div>
+    </aside>
+
+    <main class="chat-box" role="main" aria-live="polite">
+      <div class="chat-header">
+        <h1>Asistente Escolar — Robot Futurista</h1>
+      </div>
+
+      <div id="chat" class="chat-window" aria-live="polite"></div>
+
+      <div class="composer" role="region" aria-label="Enviar mensaje">
+        <button id="voiceBtn" title="Enviar por voz">🎙️</button>
+        <input id="mensaje" placeholder="Escribe tu mensaje..." aria-label="Escribe tu mensaje" onkeypress="if(event.key==='Enter') send()">
+        <button id="sendBtn" onclick="send()">Enviar</button>
+      </div>
+    </main>
+  </div>
+
+  <audio id="msgSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_c3659b7474.mp3" preload="auto"></audio>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const inp = document.getElementById('mensaje');
+    const sidebar = document.getElementById('sidebar');
+    const menuBtn = document.getElementById('menuBtn');
+    const msgSound = document.getElementById('msgSound');
+
+    menuBtn.addEventListener('click', ()=> sidebar.classList.toggle('active'));
+    sidebar.addEventListener('click', (e)=> { if(e.target === sidebar) sidebar.classList.remove('active'); });
+
+    function createRobotElement({talking=false} = {}){
+      const wrap = document.createElement('div'); wrap.className = 'robot-wrapper';
+      const glass = document.createElement('div'); glass.className = 'robot-glass';
+      if(talking) glass.classList.add('talking');
+      const ledL = document.createElement('div'); ledL.className='robot-led-left';
+      const ledR = document.createElement('div'); ledR.className='robot-led-right';
+      const eyesWrap = document.createElement('div'); eyesWrap.className='robot-eyes';
+      const eyeL = document.createElement('div'); eyeL.className='eye';
+      const eyeR = document.createElement('div'); eyeR.className='eye';
+      eyesWrap.appendChild(eyeL); eyesWrap.appendChild(eyeR);
+      const mouth = document.createElement('div'); mouth.className='robot-mouth';
+      glass.appendChild(ledL); glass.appendChild(ledR); glass.appendChild(eyesWrap); glass.appendChild(mouth);
+      wrap.appendChild(glass);
+      return {wrap, glass};
+    }
+
+    function addUser(text){
+      const row=document.createElement('div'); row.className='row user';
+      const bubble=document.createElement('div'); bubble.className='bubble user'; bubble.textContent=text;
+      row.appendChild(bubble); chat.appendChild(row); chat.scrollTop=chat.scrollHeight;
+    }
+
+    function addBot(htmlText,{animateTyping=true}={}){
+      const row=document.createElement('div'); row.className='row';
+      const {wrap, glass} = createRobotElement({});
+      row.appendChild(wrap);
+      const bubble=document.createElement('div'); bubble.className='bubble bot';
+      row.appendChild(bubble);
+      chat.appendChild(row);
+      chat.scrollTop=chat.scrollHeight;
+
+      try{ msgSound.currentTime=0; msgSound.play().catch(()=>{});}catch(e){}
+
+      if(animateTyping){
+        glass.classList.add('thinking');
+        const typing = document.createElement('div'); typing.className='typing';
+        typing.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+        bubble.appendChild(typing);
+
+        setTimeout(()=>{
+          glass.classList.remove('thinking'); glass.classList.add('talking'); bubble.innerHTML='';
+          const content = document.createElement('div'); bubble.appendChild(content);
+          const text = htmlText; let i=0; const speed=14;
+          const timer = setInterval(()=>{
+            i++; content.innerHTML=text.substring(0,i); chat.scrollTop=chat.scrollHeight;
+            if(i>=text.length){ clearInterval(timer); setTimeout(()=>glass.classList.remove('talking'),220);}
+          }, speed);
+        }, 700 + Math.random()*600);
+      } else {
+        bubble.innerHTML = htmlText;
+      }
+    }
+
+    function quick(t){ inp.value=t; send(); if(sidebar.classList.contains('active')) sidebar.classList.remove('active'); }
+
+    async function send(){
+      const text=inp.value.trim(); if(!text) return; addUser(text); inp.value=''; addBot('',{animateTyping:true});
+      try{
+        const res=await fetch('/chat',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mensaje:text})});
+        const data=await res.json(); addBot(data.respuesta,{animateTyping:true});
+      }catch(err){ addBot('⚠️ Error al conectar con el servidor. Intenta de nuevo.',{animateTyping:false}); }
+    }
+
+    window.addEventListener('load', async ()=>{
+      try{
+        const r=await fetch('/bienvenida'); const j=await r.json(); addBot(j.respuesta,{animateTyping:true});
+      }catch(e){ addBot('¡Hola! Bienvenido al asistente escolar. (Modo desconectado)',{animateTyping:false}); }
+    });
+  </script>
+</body>
+</html>
+
+"Subir index.html a templates/"
