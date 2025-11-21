@@ -321,7 +321,7 @@ def bienvenida():
     return jsonify({
         "respuesta": (
             "👋 <b>¡Hola! Soy tu asistente escolar virtual.</b><br>"
-            "Puedo ayudarte hoy:<br>"
+            " ¿Como puedo ayudarte hoy? <br>"
         )
     })
 
