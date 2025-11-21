@@ -92,7 +92,6 @@
       -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
       transition:transform .28s ease, box-shadow .28s;
     }
-    .robot-glass:hover{ transform:translateY(-4px); box-shadow:0 18px 36px rgba(0,0,0,0.7) }
 
     .robot-led-left, .robot-led-right{
       position:absolute; top:8px; width:10px; height:10px; border-radius:50%;
@@ -115,7 +114,6 @@
       transition:transform .25s linear;
       box-shadow:0 1px 1px rgba(255,255,255,0.03) inset;
     }
-    @keyframes eyeFloat{ 0%{transform:translateY(0)}50%{transform:translateY(-3px)}100%{transform:translateY(0)} }
 
     .robot-mouth{
       width:44px; height:8px; border-radius:6px; margin-top:8px;
@@ -123,18 +121,11 @@
       box-shadow: 0 8px 20px rgba(0,200,255,0.12), 0 0 20px rgba(0,200,255,0.25);
       transform-origin:center; animation:mouthIdle 2.6s ease-in-out infinite;
     }
-    @keyframes mouthIdle{ 0%{ transform:scaleY(1)} 50%{ transform:scaleY(0.75)} 100%{ transform:scaleY(1)} }
 
     .robot-glass.talking .robot-mouth{
       animation:mouthTalk .12s steps(2) infinite;
       box-shadow: 0 10px 30px rgba(0,220,255,0.25);
     }
-    @keyframes mouthTalk{ 0%{transform:scaleY(.2)} 100%{transform:scaleY(1)} }
-
-    .typing{ display:flex; align-items:center; gap:6px; padding:8px 10px; border-radius:12px; background:rgba(255,255,255,0.02) }
-    .dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); opacity:0.6; animation:dotBlink 1.2s infinite; }
-    .dot:nth-child(2){ animation-delay:.15s } .dot:nth-child(3){ animation-delay:.3s }
-    @keyframes dotBlink{ 0%{ transform:translateY(0); opacity:.5 } 50%{ transform:translateY(-6px); opacity:1 } 100%{ transform:translateY(0); opacity:.5 } }
 
     .composer{
       display:flex; gap:8px; padding:12px; align-items:center; border-top:1px solid rgba(255,255,255,0.03);
@@ -211,7 +202,6 @@
     const msgSound = document.getElementById('msgSound');
 
     menuBtn.addEventListener('click', ()=> sidebar.classList.toggle('active'));
-    sidebar.addEventListener('click', (e)=> { if(e.target === sidebar) sidebar.classList.remove('active'); });
 
     function createRobotElement({talking=false} = {}){
       const wrap = document.createElement('div'); wrap.className = 'robot-wrapper';
@@ -236,9 +226,11 @@
     }
 
     function addBot(htmlText,{animateTyping=true}={}){
+
       const row=document.createElement('div'); row.className='row';
       const {wrap, glass} = createRobotElement({});
       row.appendChild(wrap);
+
       const bubble=document.createElement('div'); bubble.className='bubble bot';
       row.appendChild(bubble);
       chat.appendChild(row);
@@ -246,41 +238,72 @@
 
       try{ msgSound.currentTime=0; msgSound.play().catch(()=>{});}catch(e){}
 
+      // ❗ Aquí se corrige: ya NO se añade robot vacío
       if(animateTyping){
-        glass.classList.add('thinking');
         const typing = document.createElement('div'); typing.className='typing';
         typing.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
         bubble.appendChild(typing);
 
+        glass.classList.add('talking');
+
         setTimeout(()=>{
-          glass.classList.remove('thinking'); glass.classList.add('talking'); bubble.innerHTML='';
-          const content = document.createElement('div'); bubble.appendChild(content);
-          const text = htmlText; let i=0; const speed=14;
-          const timer = setInterval(()=>{
-            i++; content.innerHTML=text.substring(0,i); chat.scrollTop=chat.scrollHeight;
-            if(i>=text.length){ clearInterval(timer); setTimeout(()=>glass.classList.remove('talking'),220);}
-          }, speed);
-        }, 700 + Math.random()*600);
+          bubble.innerHTML='';
+          const text = htmlText;
+          let i=0;
+          const speed=14;
+          const content=document.createElement('div');
+          bubble.appendChild(content);
+
+          const timer=setInterval(()=>{
+            i++;
+            content.innerHTML=text.substring(0,i);
+            chat.scrollTop=chat.scrollHeight;
+            if(i>=text.length){
+              clearInterval(timer);
+              setTimeout(()=>glass.classList.remove('talking'),300);
+            }
+          },speed);
+
+        },700+Math.random()*600);
+
       } else {
-        bubble.innerHTML = htmlText;
+        bubble.innerHTML=htmlText;
       }
     }
 
-    function quick(t){ inp.value=t; send(); if(sidebar.classList.contains('active')) sidebar.classList.remove('active'); }
+    function quick(t){ inp.value=t; send(); }
 
     async function send(){
-      const text=inp.value.trim(); if(!text) return; addUser(text); inp.value=''; addBot('',{animateTyping:true});
+      const text=inp.value.trim(); if(!text) return;
+
+      addUser(text);
+      inp.value='';
+
       try{
-        const res=await fetch('/chat',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mensaje:text})});
-        const data=await res.json(); addBot(data.respuesta,{animateTyping:true});
-      }catch(err){ addBot('⚠️ Error al conectar con el servidor. Intenta de nuevo.',{animateTyping:false}); }
+        const res=await fetch('/chat',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({mensaje:text})
+        });
+        const data=await res.json();
+
+        addBot(data.respuesta,{animateTyping:true});
+
+      }catch(err){
+        addBot('⚠️ Error al conectar con el servidor.',{animateTyping:false});
+      }
     }
 
     window.addEventListener('load', async ()=>{
       try{
-        const r=await fetch('/bienvenida'); const j=await r.json(); addBot(j.respuesta,{animateTyping:true});
-      }catch(e){ addBot('¡Hola! Bienvenido al asistente escolar. (Modo desconectado)',{animateTyping:false}); }
+        const r=await fetch('/bienvenida');
+        const j=await r.json();
+        addBot(j.respuesta,{animateTyping:true});
+      }catch(e){
+        addBot('¡Hola! Bienvenido al asistente escolar. (Modo offline)',{animateTyping:false});
+      }
     });
   </script>
+
 </body>
 </html>
